@@ -78,7 +78,7 @@ export default function Index({ products }) {
         </div>
 
         {/* Pagination */}
-        <nav className="mt-8">
+        <nav className="mt-8 mb-3">
           <ul className="flex items-center justify-center space-x-2">
             <li>
               <button
