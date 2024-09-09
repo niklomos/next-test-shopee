@@ -1,115 +1,165 @@
 import Image from "next/image";
-import localFont from "next/font/local";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useState } from "react";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+export async function getStaticProps() {
+  const res = await fetch("https://dummyjson.com/products?limit=50");
+  const data = await res.json();
+  return {
+    props: { products: data.products },
+  };
+}
 
-export default function Home() {
+export default function Index({ products }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+  const router = useRouter();
+  const searchQuery = router.query.search || "";
+
+  const filteredProducts = products.filter((product) =>
+    product.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const handleClick = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const currentItems = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Determine the range of page numbers to display
+  const maxButtons = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+  if (endPage - startPage + 1 < maxButtons) {
+    startPage = Math.max(1, endPage - maxButtons + 1);
+  }
+
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+      <div className="container mx-auto mt-8 px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {currentItems.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white shadow-lg rounded-lg overflow-hidden"
+            >
+              <Link href={`/products/${item.id}`} className="block">
+                <Image
+                  src={item.thumbnail}
+                  className="w-full h-65 object-cover"
+                  width={300}
+                  height={200}
+                  alt={item.title}
+                />
+                <div className="p-4 pl-4 text-left">
+                  <h5 className="text-lg font-semibold text-gray-800">
+                    {item.title}
+                  </h5>
+                  <button className="border border-red-500 text-red-500  px-2 hover:bg-red-500 hover:text-white transition duration-300">
+                    ช็อปปี้ถูกชัวร์
+                  </button>
+                  <button className="border border-green-500 text-green-500  px-2 hover:bg-green-500 hover:text-white transition duration-300 ml-2">
+                    สินค้าจัดส่งไว
+                  </button>
+                  <h6 className="text-lg font-semibold text-red-500">
+                    ${item.price}
+                  </h6>
+                </div>
+              </Link>
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Pagination */}
+        <nav className="mt-8">
+          <ul className="flex items-center justify-center space-x-2">
+            <li>
+              <button
+                onClick={() => handleClick(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 border rounded-lg ${
+                  currentPage === 1
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-white text-blue-500 hover:bg-blue-100"
+                }`}
+              >
+                &lt;
+              </button>
+            </li>
+            {startPage > 1 && (
+              <li>
+                <button
+                  onClick={() => handleClick(1)}
+                  className="px-4 py-2 border rounded-lg bg-white text-blue-500 hover:bg-blue-100"
+                >
+                  1
+                </button>
+              </li>
+            )}
+            {startPage > 2 && (
+              <li>
+                <span className="px-4 py-2 border rounded-lg text-gray-500">
+                  ...
+                </span>
+              </li>
+            )}
+            {Array.from(
+              { length: endPage - startPage + 1 },
+              (_, i) => startPage + i
+            ).map((page) => (
+              <li key={page}>
+                <button
+                  className={`px-4 py-2 border rounded-lg ${
+                    currentPage === page
+                      ? "bg-blue-500 text-white"
+                      : "bg-white text-blue-500 hover:bg-blue-100"
+                  }`}
+                  onClick={() => handleClick(page)}
+                >
+                  {page}
+                </button>
+              </li>
+            ))}
+            {endPage < totalPages - 1 && (
+              <li>
+                <span className="px-4 py-2 border rounded-lg text-gray-500">
+                  ...
+                </span>
+              </li>
+            )}
+            {endPage < totalPages && (
+              <li>
+                <button
+                  onClick={() => handleClick(totalPages)}
+                  className="px-4 py-2 border rounded-lg bg-white text-blue-500 hover:bg-blue-100"
+                >
+                  {totalPages}
+                </button>
+              </li>
+            )}
+            <li>
+              <button
+                onClick={() => handleClick(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 border rounded-lg ${
+                  currentPage === totalPages
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-white text-blue-500 hover:bg-blue-100"
+                }`}
+              >
+                &gt;
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </>
   );
 }
